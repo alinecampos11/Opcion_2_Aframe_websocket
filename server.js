@@ -1,22 +1,19 @@
-// BACKEND Node.js: MQTT → WebSocket
-const mqtt = require('mqtt');
-const WebSocket = require('ws');
 const http = require('http');
+const WebSocket = require('ws');
+const mqtt = require('mqtt');
 
-// Conexión a Mosquitto local
-const mqttClient = mqtt.connect('mqtt://localhost:1883');
-
-// Crear servidor HTTP básico (Render requiere uno)
 const PORT = process.env.PORT || 3000;
-const server = http.createServer(...);
-server.listen(PORT, () => {
-  console.log(`Servidor activo en el puerto ${PORT}`);
+
+// Servidor HTTP básico para Render
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Servidor WebSocket conectado');
 });
 
-// WebSocket Server
+// WebSocket Server enlazado al servidor HTTP
 const wss = new WebSocket.Server({ server });
 
-// Enviar a todos los clientes conectados
+// Enviar datos a todos los clientes conectados
 function broadcast(data) {
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -25,7 +22,8 @@ function broadcast(data) {
   });
 }
 
-// Conexión MQTT y suscripción
+// Conexión al broker MQTT
+const mqttClient = mqtt.connect('mqtt://localhost:1883');
 mqttClient.on('connect', () => {
   console.log('🔌 Conectado a Mosquitto');
   mqttClient.subscribe('aline/#');
@@ -37,8 +35,7 @@ mqttClient.on('message', (topic, payload) => {
   broadcast(msg);
 });
 
-// Iniciar servidor
-const PORT = process.env.PORT || 3000;
+// Iniciar el servidor
 server.listen(PORT, () => {
   console.log(`🟢 Servidor WebSocket en puerto ${PORT}`);
 });
